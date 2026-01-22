@@ -4,8 +4,8 @@ import { exists, ensureDir, readJson, writeJson } from "./fs.js";
 import type { Config, State } from "./types.js";
 
 export const CONFIG_PATH = path.join(process.cwd(), "contract-ui.config.json");
-export const STATE_PATH = path.join(process.cwd(), ".contract-ui", "state.json");
-export const BASE_DIR = path.join(process.cwd(), ".contract-ui", "base");
+export const STATE_PATH = path.join(process.cwd(), ".kibadist-ui", "state.json");
+export const BASE_DIR = path.join(process.cwd(), ".kibadist-ui", "base");
 
 export function loadConfig(): Config {
   if (!exists(CONFIG_PATH)) return { outDir: "ui", style: "tailwind" };
@@ -20,7 +20,7 @@ export function ensureInitFiles(): void {
   if (!exists(CONFIG_PATH)) {
     writeJson(CONFIG_PATH, { outDir: "ui", style: "tailwind" });
   }
-  ensureDir(path.join(process.cwd(), ".contract-ui"));
+  ensureDir(path.join(process.cwd(), ".kibadist-ui"));
   if (!exists(STATE_PATH)) {
     writeJson(STATE_PATH, { installed: {} });
   }

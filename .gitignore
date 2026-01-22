@@ -20,4 +20,4 @@ npm-debug.log*
 
 # Test output
 coverage/
-.contract-ui/
+.kibadist-ui/

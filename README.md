@@ -51,7 +51,7 @@ kibadist-ui init
 
 Creates:
 - `contract-ui.config.json` - Project configuration
-- `.contract-ui/` - Internal state directory
+- `.kibadist-ui/` - Internal state directory
 
 ### `add button`
 
