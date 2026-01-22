@@ -9,7 +9,7 @@ import { contractToButtonIR } from "./core/ir.js";
 import { generateButton } from "./core/generate.js";
 import { merge3 } from "./core/merge/merge3.js";
 import { ensureInitFiles, loadConfig, loadState, saveState, BASE_DIR, CONFIG_PATH } from "./core/state.js";
-import type { ParsedArgs } from "./core/types.js";
+import type { ButtonContract, ParsedArgs } from "./core/types.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -46,14 +46,19 @@ kibadist-ui (Button-only v1)
 
 Commands:
   init
-  add button [--style tailwind|css-modules] [--version 1.0.0]
-  upgrade button --to 1.1.0
+  add button [--style tailwind|css-modules] [--version 1.0.0] [--dry-run]
+  upgrade button --to 1.1.0 [--dry-run]
   status
+
+Options:
+  --dry-run    Preview changes without writing files
 
 Examples:
   kibadist-ui init
   kibadist-ui add button --style tailwind --version 1.0.0
+  kibadist-ui add button --dry-run
   kibadist-ui upgrade button --to 1.1.0
+  kibadist-ui upgrade button --to 1.1.0 --dry-run
   kibadist-ui status
 `.trim(),
   );
@@ -65,10 +70,48 @@ function init(): void {
   console.log("Available Button versions:", listButtonVersions().join(", "));
 }
 
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  return `${(bytes / 1024).toFixed(1)} KB`;
+}
+
+function getContractDiff(from: ButtonContract, to: ButtonContract): string[] {
+  const changes: string[] = [];
+
+  // Check for new props
+  const fromProps = Object.keys(from.props);
+  const toProps = Object.keys(to.props);
+  for (const prop of toProps) {
+    if (!fromProps.includes(prop)) {
+      changes.push(`+ ${prop} prop`);
+    }
+  }
+
+  // Check for new slots (slots is typed as unknown, so we need to handle it carefully)
+  const fromSlots = Array.isArray(from.slots) ? from.slots : [];
+  const toSlots = Array.isArray(to.slots) ? to.slots : [];
+  for (const slot of toSlots) {
+    if (!fromSlots.includes(slot)) {
+      changes.push(`+ ${slot} slot`);
+    }
+  }
+
+  // Check for new a11y attributes
+  if (to.a11y.busyAttribute && !from.a11y.busyAttribute) {
+    changes.push(`+ ${to.a11y.busyAttribute} attribute`);
+  }
+  if (to.a11y.loadingDisables && !from.a11y.loadingDisables) {
+    changes.push(`+ loadingDisables behavior`);
+  }
+
+  return changes;
+}
+
 function addButton(args: ParsedArgs): void {
   ensureInitFiles();
   const cfg = loadConfig();
   const state = loadState();
+  const dryRun = args["dry-run"] === true;
 
   const outDir = cfg.outDir;
   const style = (args.style === true ? undefined : (args.style as string)) ?? cfg.style;
@@ -78,6 +121,16 @@ function addButton(args: ParsedArgs): void {
   const ir = contractToButtonIR(contract);
 
   const files = generateButton({ ir, outDir, style: style as "tailwind" | "css-modules" });
+
+  if (dryRun) {
+    console.log("\nWould create:");
+    for (const f of files) {
+      const size = Buffer.byteLength(f.content, "utf-8");
+      console.log(`  ${f.relPath} (${formatBytes(size)})`);
+    }
+    console.log();
+    return;
+  }
 
   for (const f of files) {
     const abs = path.join(process.cwd(), f.relPath);
@@ -114,13 +167,29 @@ function upgradeButton(args: ParsedArgs): void {
     return;
   }
 
+  const dryRun = args["dry-run"] === true;
   const outDir = inst.outDir;
   const style = inst.style;
 
-  const contract = loadButtonContract(to);
+  const fromContract = loadButtonContract(from);
+  const toContract = loadButtonContract(to);
+  const contract = toContract;
   const ir = contractToButtonIR(contract);
 
   const incomingFiles = generateButton({ ir, outDir, style });
+
+  if (dryRun) {
+    console.log("\nWould modify:");
+    const changes = getContractDiff(fromContract, toContract);
+    for (const f of incomingFiles) {
+      console.log(`  ${f.relPath}`);
+      for (const change of changes) {
+        console.log(`    ${change}`);
+      }
+    }
+    console.log();
+    return;
+  }
 
   let anyConflicts = false;
 
