@@ -32,11 +32,20 @@ npx kibadist-ui init
 # Initialize project configuration
 kibadist-ui init
 
-# Add a Button component with Tailwind styling
+# Add a Button component (interactive prompts for style/version)
+kibadist-ui add button
+
+# Or specify options directly
 kibadist-ui add button --style tailwind --version 1.0.0
 
-# Later, upgrade to a new version
+# Preview changes before upgrading
+kibadist-ui diff button --to 1.1.0
+
+# Upgrade to a new version
 kibadist-ui upgrade button --to 1.1.0
+
+# Check what's installed
+kibadist-ui status
 ```
 
 ## Commands
@@ -53,25 +62,51 @@ Creates:
 - `kibadist-ui.config.json` - Project configuration
 - `.kibadist-ui/` - Internal state directory
 
+### `list`
+
+Lists available components and their versions.
+
+```bash
+kibadist-ui list
+```
+
 ### `add button`
 
 Generates a Button component.
 
 ```bash
-kibadist-ui add button [--style <style>] [--version <version>]
+kibadist-ui add button [--style <style>] [--version <version>] [--dry-run] [--force]
 ```
 
 Options:
 - `--style` - `tailwind` (default) or `css-modules`
-- `--version` - Contract version (default: `1.0.0`)
+- `--version` - Contract version (default: latest)
+- `--dry-run` - Preview what files would be created without writing them
+- `--force` - Overwrite existing component without prompting
+
+### `diff button`
+
+Shows the diff between contract versions.
+
+```bash
+kibadist-ui diff button [--from <version>] [--to <version>]
+```
+
+Options:
+- `--from` - Source version (default: installed version)
+- `--to` - Target version (default: latest)
 
 ### `upgrade button`
 
 Upgrades the Button component to a new contract version.
 
 ```bash
-kibadist-ui upgrade button --to <version>
+kibadist-ui upgrade button --to <version> [--dry-run]
 ```
+
+Options:
+- `--to` - Target version to upgrade to
+- `--dry-run` - Preview what would change without applying
 
 The upgrade performs a 3-way merge:
 1. **Base** - Original generated code from the installed version
@@ -79,6 +114,24 @@ The upgrade performs a 3-way merge:
 3. **Incoming** - New generated code from the target version
 
 If conflicts occur, they're marked with standard git conflict markers for manual resolution.
+
+### `status`
+
+Shows installed components, available upgrades, and configuration.
+
+```bash
+kibadist-ui status
+```
+
+## Interactive Mode
+
+When running in an interactive terminal, kibadist-ui will prompt for missing options:
+
+- **Style selection** - Choose between Tailwind CSS and CSS Modules
+- **Version selection** - Pick from available contract versions
+- **Overwrite handling** - When a component already exists, choose to upgrade, reinstall, or cancel
+
+Non-interactive environments (CI/CD, scripts) use sensible defaults or require explicit flags.
 
 ## Configuration
 
