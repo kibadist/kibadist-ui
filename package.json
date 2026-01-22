@@ -1,0 +1,14 @@
+{
+  "name": "contract-ui-button-v1",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "contract-ui": "src/cli.mjs"
+  },
+  "scripts": {
+    "contract-ui": "node src/cli.mjs",
+    "cu": "node src/cli.mjs"
+  },
+  "license": "MIT"
+}

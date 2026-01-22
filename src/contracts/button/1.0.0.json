@@ -1,0 +1,38 @@
+{
+  "name": "Button",
+  "version": "1.0.0",
+  "element": "button",
+  "props": {
+    "variant": {
+      "type": "enum",
+      "values": [
+        "solid",
+        "outline",
+        "ghost"
+      ],
+      "default": "solid"
+    },
+    "size": {
+      "type": "enum",
+      "values": [
+        "sm",
+        "md",
+        "lg"
+      ],
+      "default": "md"
+    },
+    "disabled": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "slots": [
+    "leftIcon",
+    "content",
+    "rightIcon"
+  ],
+  "a11y": {
+    "defaultType": "button",
+    "disabledBehavior": "native"
+  }
+}
