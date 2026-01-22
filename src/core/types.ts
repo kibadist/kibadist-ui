@@ -4,12 +4,12 @@ export interface ButtonContract {
   version: string;
   element: "button";
   props: {
-    variant?: { default?: string };
-    size?: { default?: string };
+    variant?: { values?: string[]; default?: string };
+    size?: { values?: string[]; default?: string };
     disabled?: { default?: boolean };
     loading?: { default?: boolean };
   };
-  slots: unknown;
+  slots: string[];
   a11y: {
     defaultType?: string;
     busyAttribute?: string;

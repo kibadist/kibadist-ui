@@ -67,3 +67,36 @@ export async function promptVersion(
 export function isInteractive(): boolean {
   return process.stdin.isTTY === true;
 }
+
+export type OverwriteChoice = "upgrade" | "reinstall" | "cancel";
+
+export async function promptOverwrite(
+  componentName: string,
+  currentVersion: string,
+  latestVersion: string,
+): Promise<OverwriteChoice> {
+  const hasUpgrade = currentVersion !== latestVersion;
+
+  const choices: SelectOption<OverwriteChoice>[] = [];
+
+  if (hasUpgrade) {
+    choices.push({
+      value: "upgrade",
+      name: `Upgrade to ${latestVersion}`,
+      description: `Run: kibadist-ui upgrade ${componentName} --to ${latestVersion}`,
+    });
+  }
+
+  choices.push({
+    value: "reinstall",
+    name: "Reinstall (overwrites changes)",
+    description: `Run: kibadist-ui add ${componentName} --force`,
+  });
+
+  choices.push({
+    value: "cancel",
+    name: "Cancel",
+  });
+
+  return promptSelect("What would you like to do?", choices);
+}
