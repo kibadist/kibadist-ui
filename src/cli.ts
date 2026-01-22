@@ -8,7 +8,7 @@ import { listButtonVersions, loadButtonContract } from "./core/contracts.js";
 import { contractToButtonIR } from "./core/ir.js";
 import { generateButton } from "./core/generate.js";
 import { merge3 } from "./core/merge/merge3.js";
-import { ensureInitFiles, loadConfig, loadState, saveState, BASE_DIR } from "./core/state.js";
+import { ensureInitFiles, loadConfig, loadState, saveState, BASE_DIR, CONFIG_PATH } from "./core/state.js";
 import type { ParsedArgs } from "./core/types.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -48,11 +48,13 @@ Commands:
   init
   add button [--style tailwind|css-modules] [--version 1.0.0]
   upgrade button --to 1.1.0
+  status
 
 Examples:
   kibadist-ui init
   kibadist-ui add button --style tailwind --version 1.0.0
   kibadist-ui upgrade button --to 1.1.0
+  kibadist-ui status
 `.trim(),
   );
 }
@@ -163,6 +165,38 @@ function upgradeButton(args: ParsedArgs): void {
   console.log(`\nUpgraded Button ${from} -> ${to}`);
 }
 
+function status(): void {
+  ensureInitFiles();
+  const cfg = loadConfig();
+  const state = loadState();
+
+  console.log(`kibadist-ui v${getVersion()}\n`);
+
+  // Installed components
+  const buttonInst = state.installed?.button;
+  if (buttonInst) {
+    console.log("Installed components:");
+    console.log(`  Button v${buttonInst.version} (${buttonInst.style}) → ${buttonInst.outDir}/button/`);
+  } else {
+    console.log("Installed components:");
+    console.log("  (none)");
+  }
+
+  // Available upgrades
+  const versions = listButtonVersions();
+  const latestVersion = versions[versions.length - 1];
+
+  if (buttonInst && buttonInst.version !== latestVersion) {
+    console.log("\nAvailable upgrades:");
+    console.log(`  Button: ${buttonInst.version} → ${latestVersion}`);
+  }
+
+  // Config info
+  console.log(`\nConfig: ${CONFIG_PATH}`);
+  console.log(`  outDir: ${cfg.outDir}`);
+  console.log(`  style: ${cfg.style}`);
+}
+
 const args = parseArgs(process.argv.slice(2));
 const [cmd, subcmd] = args._;
 
@@ -188,6 +222,11 @@ if (cmd === "add" && subcmd === "button") {
 
 if (cmd === "upgrade" && subcmd === "button") {
   upgradeButton(args);
+  process.exit(0);
+}
+
+if (cmd === "status") {
+  status();
   process.exit(0);
 }
 

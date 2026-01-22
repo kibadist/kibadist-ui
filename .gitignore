@@ -20,4 +20,8 @@ npm-debug.log*
 
 # Test output
 coverage/
+
+# kibadist-ui generated files
 .kibadist-ui/
+ui/
+kibadist-ui.config.json
