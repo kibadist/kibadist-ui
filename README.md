@@ -50,7 +50,7 @@ kibadist-ui init
 ```
 
 Creates:
-- `contract-ui.config.json` - Project configuration
+- `kibadist-ui.config.json` - Project configuration
 - `.kibadist-ui/` - Internal state directory
 
 ### `add button`
@@ -82,7 +82,7 @@ If conflicts occur, they're marked with standard git conflict markers for manual
 
 ## Configuration
 
-`contract-ui.config.json`:
+`kibadist-ui.config.json`:
 
 ```json
 {
@@ -135,23 +135,6 @@ ui/
 - `aria-busy` attribute for accessibility
 - Loading state disables the button
 - Transition animations
-
-## Development
-
-```bash
-# Install dependencies
-npm install
-
-# Build TypeScript
-npm run build
-
-# Watch mode
-npm run dev
-
-# Run CLI locally
-npm run ku -- init
-npm run ku -- add button
-```
 
 ## How Upgrades Work
 

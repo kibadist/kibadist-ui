@@ -19,7 +19,12 @@ export interface Merge3Options {
   semantic?: "none" | "tailwind";
 }
 
-export function merge3({ basePath, localPath, incomingContent, semantic = "none" }: Merge3Options): MergeResult {
+export function merge3({
+  basePath,
+  localPath,
+  incomingContent,
+  semantic = "none",
+}: Merge3Options): MergeResult {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "contract-ui-"));
   const incomingPath = writeTmp(tmpDir, "incoming.tmp", incomingContent);
 

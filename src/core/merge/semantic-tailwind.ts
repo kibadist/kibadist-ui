@@ -28,7 +28,7 @@ function parseConstAssignment(line: string): ParsedConstAssignment | null {
 
 function looksLikeTailwind(s: string): boolean {
   // heuristic: tailwind classes typically include '-' or ':' or '['
-  return /[-:\[\]]/.test(s);
+  return /[-:[\]]/.test(s);
 }
 
 function unionTokens(a: string, b: string): string {

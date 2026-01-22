@@ -44,8 +44,12 @@ ${(cssBaseByVersion[v] ?? cssBaseByVersion["1.1.0"]).trim()}
 .disabled { opacity: 0.5; pointer-events: none; }
 .content { display: inline-flex; align-items: center; }
 
-${hasLoading ? `.spinner { width: 1em; height: 1em; border-radius: 999px; border: 2px solid currentColor; border-top-color: transparent; display: inline-block; margin-right: 0.5rem; animation: cu_spin 0.8s linear infinite; }
-@keyframes cu_spin { to { transform: rotate(360deg); } }` : ""}
+${
+  hasLoading
+    ? `.spinner { width: 1em; height: 1em; border-radius: 999px; border: 2px solid currentColor; border-top-color: transparent; display: inline-block; margin-right: 0.5rem; animation: cu_spin 0.8s linear infinite; }
+@keyframes cu_spin { to { transform: rotate(360deg); } }`
+    : ""
+}
 `.trimStart() + "\n";
 
   const typeLines = [

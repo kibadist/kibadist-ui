@@ -25,6 +25,24 @@
   "license": "MIT",
   "author": "Maksym Ivashchenko",
   "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/core/types.d.ts",
+      "import": "./dist/core/types.js"
+    },
+    "./ir": {
+      "types": "./dist/core/ir.d.ts",
+      "import": "./dist/core/ir.js"
+    },
+    "./contracts": {
+      "types": "./dist/core/contracts.d.ts",
+      "import": "./dist/core/contracts.js"
+    },
+    "./generate": {
+      "types": "./dist/core/generate.d.ts",
+      "import": "./dist/core/generate.js"
+    }
+  },
   "files": [
     "dist"
   ],
@@ -32,14 +50,22 @@
     "kibadist-ui": "dist/cli.js"
   },
   "scripts": {
-    "build": "tsc && cp -r src/contracts dist/",
+    "build": "npm run clean && tsc && cp -r src/contracts dist/",
+    "clean": "rm -rf dist",
     "dev": "tsc --watch",
     "kibadist-ui": "node dist/cli.js",
     "ku": "node dist/cli.js",
+    "lint": "oxlint src",
+    "lint:fix": "oxlint src --fix",
+    "format": "oxfmt --write src",
+    "format:check": "oxfmt --check src",
+    "test": "npm run build && node --test 'test/*.test.js'",
     "prepublishOnly": "npm run build"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
+    "oxfmt": "^0.26.0",
+    "oxlint": "^1.41.0",
     "typescript": "^5.3.0"
   },
   "engines": {

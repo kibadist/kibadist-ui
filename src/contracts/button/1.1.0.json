@@ -5,20 +5,12 @@
   "props": {
     "variant": {
       "type": "enum",
-      "values": [
-        "solid",
-        "outline",
-        "ghost"
-      ],
+      "values": ["solid", "outline", "ghost"],
       "default": "solid"
     },
     "size": {
       "type": "enum",
-      "values": [
-        "sm",
-        "md",
-        "lg"
-      ],
+      "values": ["sm", "md", "lg"],
       "default": "md"
     },
     "disabled": {
@@ -30,12 +22,7 @@
       "default": false
     }
   },
-  "slots": [
-    "leftIcon",
-    "spinner",
-    "content",
-    "rightIcon"
-  ],
+  "slots": ["leftIcon", "spinner", "content", "rightIcon"],
   "a11y": {
     "defaultType": "button",
     "disabledBehavior": "native",

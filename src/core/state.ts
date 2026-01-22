@@ -3,7 +3,7 @@ import process from "node:process";
 import { exists, ensureDir, readJson, writeJson } from "./fs.js";
 import type { Config, State } from "./types.js";
 
-export const CONFIG_PATH = path.join(process.cwd(), "contract-ui.config.json");
+export const CONFIG_PATH = path.join(process.cwd(), "kibadist-ui.config.json");
 export const STATE_PATH = path.join(process.cwd(), ".kibadist-ui", "state.json");
 export const BASE_DIR = path.join(process.cwd(), ".kibadist-ui", "base");
 

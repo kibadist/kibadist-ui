@@ -1,14 +1,23 @@
 #!/usr/bin/env node
 import path from "node:path";
 import process from "node:process";
+import { fileURLToPath } from "node:url";
 
-import { exists, writeFile } from "./core/fs.js";
+import { exists, readJson, writeFile } from "./core/fs.js";
 import { listButtonVersions, loadButtonContract } from "./core/contracts.js";
 import { contractToButtonIR } from "./core/ir.js";
 import { generateButton } from "./core/generate.js";
 import { merge3 } from "./core/merge/merge3.js";
 import { ensureInitFiles, loadConfig, loadState, saveState, BASE_DIR } from "./core/state.js";
-import type { ParsedArgs, State } from "./core/types.js";
+import type { ParsedArgs } from "./core/types.js";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+function getVersion(): string {
+  const pkgPath = path.join(__dirname, "..", "package.json");
+  const pkg = readJson<{ version: string }>(pkgPath);
+  return pkg.version;
+}
 
 function die(msg: string): never {
   console.error(msg);
@@ -44,7 +53,7 @@ Examples:
   kibadist-ui init
   kibadist-ui add button --style tailwind --version 1.0.0
   kibadist-ui upgrade button --to 1.1.0
-`.trim()
+`.trim(),
   );
 }
 
@@ -78,7 +87,11 @@ function addButton(args: ParsedArgs): void {
     writeFile(baseAbs, f.content);
   }
 
-  state.installed.button = { version: ir.version, style: style as "tailwind" | "css-modules", outDir };
+  state.installed.button = {
+    version: ir.version,
+    style: style as "tailwind" | "css-modules",
+    outDir,
+  };
   saveState(state);
 
   console.log(`Added Button ${ir.version} (${style})`);
@@ -152,6 +165,11 @@ function upgradeButton(args: ParsedArgs): void {
 
 const args = parseArgs(process.argv.slice(2));
 const [cmd, subcmd] = args._;
+
+if (args.version || args.v || cmd === "version") {
+  console.log(getVersion());
+  process.exit(0);
+}
 
 if (!cmd || cmd === "help" || cmd === "-h" || cmd === "--help") {
   help();
