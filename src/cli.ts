@@ -9,6 +9,7 @@ import { contractToButtonIR } from "./core/ir.js";
 import { generateButton } from "./core/generate.js";
 import { merge3 } from "./core/merge/merge3.js";
 import { ensureInitFiles, loadConfig, loadState, saveState, BASE_DIR, CONFIG_PATH } from "./core/state.js";
+import { isInteractive, promptStyle, promptVersion } from "./core/prompt.js";
 import type { ButtonContract, ParsedArgs } from "./core/types.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -140,20 +141,46 @@ function getContractDiff(from: ButtonContract, to: ButtonContract): string[] {
   return changes;
 }
 
-function addButton(args: ParsedArgs): void {
+async function addButton(args: ParsedArgs): Promise<void> {
   ensureInitFiles();
   const cfg = loadConfig();
   const state = loadState();
   const dryRun = args["dry-run"] === true;
+  const interactive = isInteractive();
+  const versions = listButtonVersions();
+  const latestVersion = versions[versions.length - 1];
 
   const outDir = cfg.outDir;
-  const style = (args.style === true ? undefined : (args.style as string)) ?? cfg.style;
-  const version = (args.version === true ? undefined : (args.version as string)) ?? "1.0.0";
+
+  // Resolve style: flag > interactive > config default
+  let style: "tailwind" | "css-modules";
+  const styleArg = args.style === true ? undefined : (args.style as string);
+  if (styleArg) {
+    style = styleArg as "tailwind" | "css-modules";
+  } else if (interactive) {
+    style = await promptStyle(cfg.style);
+  } else {
+    style = cfg.style;
+  }
+
+  // Resolve version: flag > interactive > latest
+  let version: string;
+  const versionArg = args.version === true ? undefined : (args.version as string);
+  if (versionArg) {
+    version = versionArg;
+  } else if (interactive) {
+    version = await promptVersion(versions);
+  } else {
+    version = latestVersion;
+  }
+
+  console.log();
+  console.log("Creating Button component...");
 
   const contract = loadButtonContract(version);
   const ir = contractToButtonIR(contract);
 
-  const files = generateButton({ ir, outDir, style: style as "tailwind" | "css-modules" });
+  const files = generateButton({ ir, outDir, style });
 
   if (dryRun) {
     console.log("\nWould create:");
@@ -168,7 +195,7 @@ function addButton(args: ParsedArgs): void {
   for (const f of files) {
     const abs = path.join(process.cwd(), f.relPath);
     writeFile(abs, f.content);
-    console.log("Wrote", f.relPath);
+    console.log(`  Wrote ${f.relPath}`);
 
     // store base snapshot
     const baseAbs = path.join(BASE_DIR, "button", ir.version, path.basename(f.relPath));
@@ -177,15 +204,19 @@ function addButton(args: ParsedArgs): void {
 
   state.installed.button = {
     version: ir.version,
-    style: style as "tailwind" | "css-modules",
+    style,
     outDir,
   };
   saveState(state);
 
-  console.log(`Added Button ${ir.version} (${style})`);
+  console.log();
+  console.log(`Done! Button ${ir.version} (${style}) added.`);
+  console.log();
+  console.log("Import with:");
+  console.log(`  import { Button } from '@/${outDir}/button/Button'`);
 }
 
-function upgradeButton(args: ParsedArgs): void {
+async function upgradeButton(args: ParsedArgs): Promise<void> {
   ensureInitFiles();
   const state = loadState();
   const inst = state.installed?.button;
@@ -198,9 +229,23 @@ function upgradeButton(args: ParsedArgs): void {
     });
   }
 
-  const to = args.to === true ? undefined : (args.to as string);
-  if (!to) {
-    const versions = listButtonVersions();
+  const versions = listButtonVersions();
+  const interactive = isInteractive();
+
+  // Resolve target version: flag > interactive > error
+  let to: string;
+  const toArg = args.to === true ? undefined : (args.to as string);
+  if (toArg) {
+    to = toArg;
+  } else if (interactive) {
+    // Filter to versions newer than current
+    const upgradeVersions = versions.filter((v) => v !== inst.version);
+    if (upgradeVersions.length === 0) {
+      console.log("Already at latest version:", inst.version);
+      return;
+    }
+    to = await promptVersion(upgradeVersions, inst.version);
+  } else {
     dieWithContext("Missing required flag --to", {
       usage: "kibadist-ui upgrade button --to <version>",
       available: versions,
@@ -214,6 +259,9 @@ function upgradeButton(args: ParsedArgs): void {
     console.log("Nothing to do; already at", to);
     return;
   }
+
+  console.log();
+  console.log(`Upgrading Button ${from} -> ${to}...`);
 
   const dryRun = args["dry-run"] === true;
   const outDir = inst.outDir;
@@ -268,7 +316,7 @@ function upgradeButton(args: ParsedArgs): void {
     });
 
     writeFile(localAbs, res.mergedText);
-    console.log(res.hasConflicts ? "Merged (conflicts)" : "Merged", f.relPath);
+    console.log(res.hasConflicts ? "  Merged (conflicts)" : "  Merged", f.relPath);
 
     if (res.hasConflicts) anyConflicts = true;
   }
@@ -289,7 +337,8 @@ function upgradeButton(args: ParsedArgs): void {
   state.installed.button = inst;
   saveState(state);
 
-  console.log(`\nUpgraded Button ${from} -> ${to}`);
+  console.log();
+  console.log(`Done! Button upgraded ${from} -> ${to}`);
 }
 
 function status(): void {
@@ -343,21 +392,15 @@ if (cmd === "init") {
 }
 
 if (cmd === "add" && subcmd === "button") {
-  addButton(args);
-  process.exit(0);
-}
-
-if (cmd === "upgrade" && subcmd === "button") {
-  upgradeButton(args);
-  process.exit(0);
-}
-
-if (cmd === "status") {
+  addButton(args).then(() => process.exit(0));
+} else if (cmd === "upgrade" && subcmd === "button") {
+  upgradeButton(args).then(() => process.exit(0));
+} else if (cmd === "status") {
   status();
   process.exit(0);
+} else {
+  dieWithContext(`Unknown command: ${cmd}`, {
+    usage: "kibadist-ui <command>",
+    example: "kibadist-ui help",
+  });
 }
-
-dieWithContext(`Unknown command: ${cmd}`, {
-  usage: "kibadist-ui <command>",
-  example: "kibadist-ui help",
-});
