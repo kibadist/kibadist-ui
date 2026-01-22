@@ -31,7 +31,7 @@ function parseArgs(argv) {
 
 function help() {
   console.log(`
-contract-ui (Button-only v1)
+kibadist-ui (Button-only v1)
 
 Commands:
   init
@@ -39,9 +39,9 @@ Commands:
   upgrade button --to 1.1.0
 
 Examples:
-  node src/cli.mjs init
-  node src/cli.mjs add button --style tailwind --version 1.0.0
-  node src/cli.mjs upgrade button --to 1.1.0
+  kibadist-ui init
+  kibadist-ui add button --style tailwind --version 1.0.0
+  kibadist-ui upgrade button --to 1.1.0
 `.trim());
 }
 

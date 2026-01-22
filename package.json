@@ -1,14 +1,41 @@
 {
-  "name": "contract-ui-button-v1",
+  "name": "kibadist-ui",
   "version": "1.0.0",
-  "private": true,
+  "description": "Contract-driven UI component generator with upgrade support",
+  "keywords": [
+    "cli",
+    "ui",
+    "components",
+    "codegen",
+    "contract",
+    "button",
+    "tailwind",
+    "css-modules",
+    "upgrade",
+    "merge"
+  ],
+  "homepage": "https://github.com/kibadist/kibadist-ui#readme",
+  "bugs": {
+    "url": "https://github.com/kibadist/kibadist-ui/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kibadist/kibadist-ui.git"
+  },
+  "license": "MIT",
+  "author": "Maksym Ivashchenko",
   "type": "module",
+  "files": [
+    "src"
+  ],
   "bin": {
-    "contract-ui": "src/cli.mjs"
+    "kibadist-ui": "src/cli.mjs"
   },
   "scripts": {
-    "contract-ui": "node src/cli.mjs",
-    "cu": "node src/cli.mjs"
+    "kibadist-ui": "node src/cli.mjs",
+    "ku": "node src/cli.mjs"
   },
-  "license": "MIT"
+  "engines": {
+    "node": ">=18"
+  }
 }
