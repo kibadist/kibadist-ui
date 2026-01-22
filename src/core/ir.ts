@@ -1,4 +1,6 @@
-export function contractToButtonIR(contract) {
+import type { ButtonContract, ButtonIR } from "./types.js";
+
+export function contractToButtonIR(contract: ButtonContract): ButtonIR {
   const p = contract.props ?? {};
   return {
     name: contract.name,

@@ -2,20 +2,21 @@
 import path from "node:path";
 import process from "node:process";
 
-import { ensureDir, exists, readFile, writeFile } from "./core/fs.mjs";
-import { listButtonVersions, loadButtonContract } from "./core/contracts.mjs";
-import { contractToButtonIR } from "./core/ir.mjs";
-import { generateButton } from "./core/generate.mjs";
-import { merge3 } from "./core/merge/merge3.mjs";
-import { ensureInitFiles, loadConfig, loadState, saveState, BASE_DIR } from "./core/state.mjs";
+import { exists, writeFile } from "./core/fs.js";
+import { listButtonVersions, loadButtonContract } from "./core/contracts.js";
+import { contractToButtonIR } from "./core/ir.js";
+import { generateButton } from "./core/generate.js";
+import { merge3 } from "./core/merge/merge3.js";
+import { ensureInitFiles, loadConfig, loadState, saveState, BASE_DIR } from "./core/state.js";
+import type { ParsedArgs, State } from "./core/types.js";
 
-function die(msg) {
+function die(msg: string): never {
   console.error(msg);
   process.exit(1);
 }
 
-function parseArgs(argv) {
-  const out = { _: [] };
+function parseArgs(argv: string[]): ParsedArgs {
+  const out: ParsedArgs = { _: [] };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a.startsWith("--")) {
@@ -29,8 +30,9 @@ function parseArgs(argv) {
   return out;
 }
 
-function help() {
-  console.log(`
+function help(): void {
+  console.log(
+    `
 kibadist-ui (Button-only v1)
 
 Commands:
@@ -42,28 +44,29 @@ Examples:
   kibadist-ui init
   kibadist-ui add button --style tailwind --version 1.0.0
   kibadist-ui upgrade button --to 1.1.0
-`.trim());
+`.trim()
+  );
 }
 
-function init() {
+function init(): void {
   ensureInitFiles();
-  console.log("✅ Initialized.");
+  console.log("Initialized.");
   console.log("Available Button versions:", listButtonVersions().join(", "));
 }
 
-function addButton(args) {
+function addButton(args: ParsedArgs): void {
   ensureInitFiles();
   const cfg = loadConfig();
   const state = loadState();
 
   const outDir = cfg.outDir;
-  const style = (args.style === true ? undefined : args.style) ?? cfg.style;
-  const version = (args.version === true ? undefined : args.version) ?? "1.0.0";
+  const style = (args.style === true ? undefined : (args.style as string)) ?? cfg.style;
+  const version = (args.version === true ? undefined : (args.version as string)) ?? "1.0.0";
 
   const contract = loadButtonContract(version);
   const ir = contractToButtonIR(contract);
 
-  const files = generateButton({ ir, outDir, style });
+  const files = generateButton({ ir, outDir, style: style as "tailwind" | "css-modules" });
 
   for (const f of files) {
     const abs = path.join(process.cwd(), f.relPath);
@@ -75,19 +78,19 @@ function addButton(args) {
     writeFile(baseAbs, f.content);
   }
 
-  state.installed.button = { version: ir.version, style, outDir };
+  state.installed.button = { version: ir.version, style: style as "tailwind" | "css-modules", outDir };
   saveState(state);
 
-  console.log(`✅ Added Button ${ir.version} (${style})`);
+  console.log(`Added Button ${ir.version} (${style})`);
 }
 
-function upgradeButton(args) {
+function upgradeButton(args: ParsedArgs): void {
   ensureInitFiles();
   const state = loadState();
   const inst = state.installed?.button;
   if (!inst) die("Button not installed. Run: add button");
 
-  const to = args.to === true ? undefined : args.to;
+  const to = args.to === true ? undefined : (args.to as string);
   if (!to) die("Missing --to <version>");
 
   const from = inst.version;
@@ -123,13 +126,13 @@ function upgradeButton(args) {
     });
 
     writeFile(localAbs, res.mergedText);
-    console.log(res.hasConflicts ? "⚠️ Merged (conflicts)" : "✅ Merged", f.relPath);
+    console.log(res.hasConflicts ? "Merged (conflicts)" : "Merged", f.relPath);
 
     if (res.hasConflicts) anyConflicts = true;
   }
 
   if (anyConflicts) {
-    console.log("\n⚠️ Conflicts remain (look for <<<<<<< markers). Resolve manually.");
+    console.log("\nConflicts remain (look for <<<<<<< markers). Resolve manually.");
     console.log("State was NOT advanced.");
     return;
   }
@@ -144,7 +147,7 @@ function upgradeButton(args) {
   state.installed.button = inst;
   saveState(state);
 
-  console.log(`\n✅ Upgraded Button ${from} -> ${to}`);
+  console.log(`\nUpgraded Button ${from} -> ${to}`);
 }
 
 const args = parseArgs(process.argv.slice(2));
@@ -170,4 +173,4 @@ if (cmd === "upgrade" && subcmd === "button") {
   process.exit(0);
 }
 
-die("Unknown command. Run: node src/cli.mjs help");
+die("Unknown command. Run: kibadist-ui help");

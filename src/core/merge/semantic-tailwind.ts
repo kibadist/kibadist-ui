@@ -11,19 +11,27 @@
  * by UNIONing the class tokens:
  *   const base = "a b c d";
  */
-function parseConstAssignment(line) {
+
+interface ParsedConstAssignment {
+  indent: string;
+  name: string;
+  quote: string;
+  value: string;
+}
+
+function parseConstAssignment(line: string): ParsedConstAssignment | null {
   // indentation + const name + quote + value
   const m = line.match(/^(\s*)const\s+([A-Za-z0-9_$]+)\s*=\s*(["'`])([\s\S]*?)\3\s*;\s*$/);
   if (!m) return null;
   return { indent: m[1], name: m[2], quote: m[3], value: m[4] };
 }
 
-function looksLikeTailwind(s) {
+function looksLikeTailwind(s: string): boolean {
   // heuristic: tailwind classes typically include '-' or ':' or '['
   return /[-:\[\]]/.test(s);
 }
 
-function unionTokens(a, b) {
+function unionTokens(a: string, b: string): string {
   const aTokens = a.split(/\s+/).filter(Boolean);
   const seen = new Set(aTokens);
   const out = [...aTokens];
@@ -36,12 +44,18 @@ function unionTokens(a, b) {
   return out.join(" ");
 }
 
-export function resolveTailwindConstStringConflicts(text) {
+export interface TailwindConflictResult {
+  text: string;
+  changed: boolean;
+  stillHasConflicts: boolean;
+}
+
+export function resolveTailwindConstStringConflicts(text: string): TailwindConflictResult {
   const conflictRe = /<<<<<<<[^\n]*\n([\s\S]*?)\n=======\n([\s\S]*?)\n>>>>>>>[^\n]*\n/g;
 
   let changed = false;
 
-  const out = text.replace(conflictRe, (full, a, b) => {
+  const out = text.replace(conflictRe, (full, a: string, b: string) => {
     const aTrim = a.trimEnd();
     const bTrim = b.trimEnd();
 

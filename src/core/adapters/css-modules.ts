@@ -1,12 +1,14 @@
+import type { ButtonIR, GeneratedFile } from "../types.js";
+
 /**
  * CSS Modules style adapter
  * - emits Button.tsx + Button.module.css
  */
-export function buttonCssModulesFiles(ir, outDir) {
+export function buttonCssModulesFiles(ir: ButtonIR, outDir: string): GeneratedFile[] {
   const hasLoading = ir.hasLoading;
   const v = ir.version;
 
-  const cssBaseByVersion = {
+  const cssBaseByVersion: Record<string, string> = {
     "1.0.0": `
 .base {
   display: inline-flex;
@@ -24,10 +26,11 @@ export function buttonCssModulesFiles(ir, outDir) {
   transition: transform 120ms ease, opacity 120ms ease;
 }
 .base:active { transform: scale(0.98); }
-`
+`,
   };
 
-  const css = `
+  const css =
+    `
 ${(cssBaseByVersion[v] ?? cssBaseByVersion["1.1.0"]).trim()}
 
 .variant_solid { background: black; color: white; }
@@ -51,7 +54,9 @@ ${hasLoading ? `.spinner { width: 1em; height: 1em; border-radius: 999px; border
     hasLoading ? `loading?: boolean;` : null,
     `leftIcon?: React.ReactNode;`,
     `rightIcon?: React.ReactNode;`,
-  ].filter(Boolean).join("\n  ");
+  ]
+    .filter(Boolean)
+    .join("\n  ");
 
   const destructure = [
     `variant = "${ir.defaults.variant}"`,
@@ -64,15 +69,16 @@ ${hasLoading ? `.spinner { width: 1em; height: 1em; border-radius: 999px; border
     `className`,
     `children`,
     `...buttonProps`,
-  ].filter(Boolean).join(",\n      ");
+  ]
+    .filter(Boolean)
+    .join(",\n      ");
 
-  const disabledLogic = hasLoading && ir.a11y.loadingDisables
-    ? `const isDisabled = Boolean(disabled || loading);`
-    : `const isDisabled = Boolean(disabled);`;
+  const disabledLogic =
+    hasLoading && ir.a11y.loadingDisables
+      ? `const isDisabled = Boolean(disabled || loading);`
+      : `const isDisabled = Boolean(disabled);`;
 
-  const ariaBusyLine = hasLoading
-    ? `${ir.a11y.busyAttribute}={loading || undefined}`
-    : "";
+  const ariaBusyLine = hasLoading ? `${ir.a11y.busyAttribute}={loading || undefined}` : "";
 
   const leftSlot = hasLoading
     ? `{loading ? <span className={styles.spinner} aria-hidden="true" /> : leftIcon}`

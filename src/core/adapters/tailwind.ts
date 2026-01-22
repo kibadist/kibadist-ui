@@ -1,3 +1,5 @@
+import type { ButtonIR, GeneratedFile } from "../types.js";
+
 /**
  * Tailwind style adapter
  * - emits Button.tsx
@@ -5,11 +7,11 @@
  *
  * v1.1.0 slightly changes upstream base classes to create a realistic merge point.
  */
-export function buttonTailwindFiles(ir, outDir) {
+export function buttonTailwindFiles(ir: ButtonIR, outDir: string): GeneratedFile[] {
   const hasLoading = ir.hasLoading;
   const v = ir.version;
 
-  const upstreamBaseByVersion = {
+  const upstreamBaseByVersion: Record<string, string> = {
     "1.0.0": "inline-flex items-center justify-center rounded-md",
     "1.1.0": "inline-flex items-center justify-center rounded-md transition-colors",
   };
@@ -21,7 +23,9 @@ export function buttonTailwindFiles(ir, outDir) {
     hasLoading ? `loading?: boolean;` : null,
     `leftIcon?: React.ReactNode;`,
     `rightIcon?: React.ReactNode;`,
-  ].filter(Boolean).join("\n  ");
+  ]
+    .filter(Boolean)
+    .join("\n  ");
 
   const destructure = [
     `variant = "${ir.defaults.variant}"`,
@@ -34,15 +38,16 @@ export function buttonTailwindFiles(ir, outDir) {
     `className`,
     `children`,
     `...buttonProps`,
-  ].filter(Boolean).join(",\n      ");
+  ]
+    .filter(Boolean)
+    .join(",\n      ");
 
-  const disabledLogic = hasLoading && ir.a11y.loadingDisables
-    ? `const isDisabled = Boolean(disabled || loading);`
-    : `const isDisabled = Boolean(disabled);`;
+  const disabledLogic =
+    hasLoading && ir.a11y.loadingDisables
+      ? `const isDisabled = Boolean(disabled || loading);`
+      : `const isDisabled = Boolean(disabled);`;
 
-  const ariaBusyLine = hasLoading
-    ? `${ir.a11y.busyAttribute}={loading || undefined}`
-    : "";
+  const ariaBusyLine = hasLoading ? `${ir.a11y.busyAttribute}={loading || undefined}` : "";
 
   const leftSlot = hasLoading
     ? `{loading ? <span className="cu-spinner" aria-hidden="true" /> : leftIcon}`
@@ -111,7 +116,5 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 Button.displayName = "Button";${note}
 `;
 
-  return [
-    { relPath: `${outDir}/button/Button.tsx`, content: tsx }
-  ];
+  return [{ relPath: `${outDir}/button/Button.tsx`, content: tsx }];
 }

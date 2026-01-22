@@ -26,14 +26,21 @@
   "author": "Maksym Ivashchenko",
   "type": "module",
   "files": [
-    "src"
+    "dist"
   ],
   "bin": {
-    "kibadist-ui": "src/cli.mjs"
+    "kibadist-ui": "dist/cli.js"
   },
   "scripts": {
-    "kibadist-ui": "node src/cli.mjs",
-    "ku": "node src/cli.mjs"
+    "build": "tsc && cp -r src/contracts dist/",
+    "dev": "tsc --watch",
+    "kibadist-ui": "node dist/cli.js",
+    "ku": "node dist/cli.js",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0"
   },
   "engines": {
     "node": ">=18"

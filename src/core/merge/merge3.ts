@@ -2,16 +2,24 @@ import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
 import { spawnSync } from "node:child_process";
-import { resolveTailwindConstStringConflicts } from "./semantic-tailwind.mjs";
+import { resolveTailwindConstStringConflicts } from "./semantic-tailwind.js";
+import type { MergeResult } from "../types.js";
 
-function writeTmp(dir, name, content) {
+function writeTmp(dir: string, name: string, content: string): string {
   fs.mkdirSync(dir, { recursive: true });
   const p = path.join(dir, name);
   fs.writeFileSync(p, content, "utf8");
   return p;
 }
 
-export function merge3({ basePath, localPath, incomingContent, semantic = "none" }) {
+export interface Merge3Options {
+  basePath: string;
+  localPath: string;
+  incomingContent: string;
+  semantic?: "none" | "tailwind";
+}
+
+export function merge3({ basePath, localPath, incomingContent, semantic = "none" }: Merge3Options): MergeResult {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "contract-ui-"));
   const incomingPath = writeTmp(tmpDir, "incoming.tmp", incomingContent);
 
@@ -36,7 +44,11 @@ export function merge3({ basePath, localPath, incomingContent, semantic = "none"
     hasConflicts = r.stillHasConflicts;
   }
 
-  try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch {}
+  try {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  } catch {
+    // ignore cleanup errors
+  }
 
   return { mergedText: merged, hasConflicts };
 }
