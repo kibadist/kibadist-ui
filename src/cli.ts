@@ -166,7 +166,7 @@ function upgradeButton(args: ParsedArgs): void {
 const args = parseArgs(process.argv.slice(2));
 const [cmd, subcmd] = args._;
 
-if (args.version || args.v || cmd === "version") {
+if ((args.version === true || args.v === true || cmd === "version") && !subcmd) {
   console.log(getVersion());
   process.exit(0);
 }
