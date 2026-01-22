@@ -24,6 +24,39 @@ function die(msg: string): never {
   process.exit(1);
 }
 
+interface ErrorContext {
+  usage?: string;
+  available?: string[];
+  current?: string;
+  example?: string;
+}
+
+function dieWithContext(error: string, ctx: ErrorContext): never {
+  const lines = [`Error: ${error}`, ""];
+
+  if (ctx.usage) {
+    lines.push(`Usage: ${ctx.usage}`, "");
+  }
+
+  if (ctx.available) {
+    lines.push(`Available versions: ${ctx.available.join(", ")}`);
+  }
+
+  if (ctx.current) {
+    lines.push(`Currently installed: ${ctx.current}`);
+  }
+
+  if (ctx.available || ctx.current) {
+    lines.push("");
+  }
+
+  if (ctx.example) {
+    lines.push("Example:", `  ${ctx.example}`);
+  }
+
+  die(lines.join("\n"));
+}
+
 function parseArgs(argv: string[]): ParsedArgs {
   const out: ParsedArgs = { _: [] };
   for (let i = 0; i < argv.length; i++) {
@@ -156,10 +189,25 @@ function upgradeButton(args: ParsedArgs): void {
   ensureInitFiles();
   const state = loadState();
   const inst = state.installed?.button;
-  if (!inst) die("Button not installed. Run: add button");
+  if (!inst) {
+    const versions = listButtonVersions();
+    dieWithContext("Button is not installed", {
+      usage: "kibadist-ui add button [--version <version>]",
+      available: versions,
+      example: "kibadist-ui add button",
+    });
+  }
 
   const to = args.to === true ? undefined : (args.to as string);
-  if (!to) die("Missing --to <version>");
+  if (!to) {
+    const versions = listButtonVersions();
+    dieWithContext("Missing required flag --to", {
+      usage: "kibadist-ui upgrade button --to <version>",
+      available: versions,
+      current: inst.version,
+      example: `kibadist-ui upgrade button --to ${versions[versions.length - 1]}`,
+    });
+  }
 
   const from = inst.version;
   if (to === from) {
@@ -197,8 +245,18 @@ function upgradeButton(args: ParsedArgs): void {
     const localAbs = path.join(process.cwd(), f.relPath);
     const baseAbs = path.join(BASE_DIR, "button", from, path.basename(f.relPath));
 
-    if (!exists(localAbs)) die(`Missing local file: ${f.relPath}`);
-    if (!exists(baseAbs)) die(`Missing base snapshot: ${path.relative(process.cwd(), baseAbs)}`);
+    if (!exists(localAbs)) {
+      dieWithContext(`Missing local file: ${f.relPath}`, {
+        usage: "kibadist-ui add button",
+        example: "kibadist-ui add button --version " + from,
+      });
+    }
+    if (!exists(baseAbs)) {
+      dieWithContext(`Missing base snapshot: ${path.relative(process.cwd(), baseAbs)}`, {
+        usage: "kibadist-ui add button",
+        example: "kibadist-ui add button --version " + from,
+      });
+    }
 
     const semantic = style === "tailwind" && f.relPath.endsWith(".tsx") ? "tailwind" : "none";
 
@@ -299,4 +357,7 @@ if (cmd === "status") {
   process.exit(0);
 }
 
-die("Unknown command. Run: kibadist-ui help");
+dieWithContext(`Unknown command: ${cmd}`, {
+  usage: "kibadist-ui <command>",
+  example: "kibadist-ui help",
+});
